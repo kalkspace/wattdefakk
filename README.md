@@ -1,6 +1,16 @@
 # wattdefakk
 Multiplayer drag and drop drawing and guessing game
 
+- Two players form the painting team, this role alternates for every round
+- They will be given a random term from a list and will have to drag a representation of the term with the existing building blocks onto the playing field
+- The Clue: The two painters must talk to each other and must always take turns in drawing a brick
+- Meanwhile, the other players form the guessing team and try to guess which term is being searched for
+
+Wireframes here:
+https://balsamiq.cloud/sx33/pgcynd8
+
+
+------------------------------------------
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
