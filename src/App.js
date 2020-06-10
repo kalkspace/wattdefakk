@@ -60,10 +60,10 @@ function App() {
           user && userSetupDone &&
           <UserProvider value={user}>
             <Switch>
-              <Route path="/game/:uuid">
+              <Route path="/game/:id">
                 <Canvas />
               </Route>
-              <Route path="/join/:uuid">
+              <Route path="/join/:id">
                 <Join />
               </Route>
               <Route path="/">
