@@ -16,3 +16,5 @@ const config = {
 export const firebaseApp = firebase.initializeApp(config);
 export const firebaseAuth = firebase.auth();
 export const firestore = firebase.firestore();
+export const fireUsers = firestore.collection('users');
+export const fireGames = firestore.collection('games');

@@ -10,10 +10,11 @@ import { uniqueNamesGenerator, adjectives, animals } from 'unique-names-generato
 import "./App.css";
 
 import { UserProvider } from './contexts/user';
-import { firebaseAuth } from './firebase/app';
+import { firebaseAuth, fireUsers } from './firebase/app';
 import Canvas from "./components/canvas/canvas";
 import Landing from "./components/landing/landing";
 import Join from "./components/join/join";
+import { useDocument } from 'react-firebase-hooks/firestore';
 
 const generateRandomName = () => uniqueNamesGenerator({
   dictionaries: [adjectives, animals], // colors can be omitted here as not used
@@ -30,25 +31,22 @@ function App() {
   }, []);
 
   const [user, authLoading, authError] = useAuthState(firebaseAuth);
+  const [userInfo, userInfoLoading, userInfoError] = useDocument(user && fireUsers.doc(user.uid));
 
   useEffect(() => {
-    if (userSetupDone || !user) return;
+    (async () => {
+      if (userSetupDone || !user || !userInfo) return;
 
-    if (!user.displayName) {
-      console.log('Setting random name');
-      const randomName = generateRandomName();
-      user.updateProfile({ 'displayName': randomName });
+      if (!userInfo.get('name')) {
+        console.log('Setting random name');
+        console.log(userInfo);
+        const randomName = generateRandomName();
+        await userInfo.ref.set({ name: randomName }, { merge: true });
+      }
 
-      // TODO: Figure out why this is needed
-      Object.defineProperty(user, 'displayName', {
-        value: randomName,
-        configurable: true,
-        enumerable: true,
-      });
-    }
-
-    setUserSetupDone(true);
-  }, [user, userSetupDone]);
+      setUserSetupDone(true);
+    })();
+  }, [user, userInfo, userSetupDone]);
 
   return (
     <Router>
@@ -57,8 +55,8 @@ function App() {
           <h1>Wattdefakk</h1>
         </header>
         {
-          user && userSetupDone &&
-          <UserProvider value={user}>
+          user && userInfo && userSetupDone &&
+          <UserProvider value={{ user, userInfo }}>
             <Switch>
               <Route path="/game/:id">
                 <Canvas />
@@ -77,12 +75,16 @@ function App() {
           <div>Logging you in...</div>
         }
         {
-          !authLoading && !userSetupDone &&
+          userInfoLoading &&
           <div>Setting up user...</div>
         }
         {
           authError &&
           <div>Connecting to firebase auth failed :(</div>
+        }
+        {
+          userInfoError &&
+          <div>Connecting to user db failed :(</div>
         }
       </div>
     </Router>
