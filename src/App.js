@@ -1,29 +1,51 @@
-import * as firebase from 'firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
   Switch,
   Route
 } from "react-router-dom";
+import { uniqueNamesGenerator, adjectives, animals } from 'unique-names-generator';
 
 import "./App.css";
 
-import './firebase/app';
+import { firebaseAuth } from './firebase/app';
 import Canvas from "./components/canvas/canvas";
 
+const generateRandomName = () => uniqueNamesGenerator({
+  dictionaries: [adjectives, animals], // colors can be omitted here as not used
+  length: 2,
+  style: 'capital',
+  separator: ' ',
+});
+
 function App() {
-  useEffect(() => {
-    firebase.auth().signInAnonymously();
-  });
-
-  const [user, authLoading, authError] = useAuthState(firebase.auth());
+  const [userSetupDone, setUserSetupDone] = useState(false);
 
   useEffect(() => {
-    if (user && !user.displayName) {
-      user.updateProfile({ 'displayName': 'Gamer' })
+    firebaseAuth.signInAnonymously();
+  }, []);
+
+  const [user, authLoading, authError] = useAuthState(firebaseAuth);
+
+  useEffect(() => {
+    if (userSetupDone || !user) return;
+
+    if (!user.displayName) {
+      console.log('Setting random name');
+      const randomName = generateRandomName();
+      user.updateProfile({ 'displayName': randomName });
+
+      // TODO: Figure out why this is needed
+      Object.defineProperty(user, 'displayName', {
+        value: randomName,
+        configurable: true,
+        enumerable: true,
+      });
     }
-  }, [user]);
+
+    setUserSetupDone(true);
+  }, [user, userSetupDone]);
 
   return (
     <Router>
@@ -52,6 +74,10 @@ function App() {
         {
           authLoading &&
           <div>Logging you in...</div>
+        }
+        {
+          !authLoading && !userSetupDone &&
+          <div>Setting up user...</div>
         }
         {
           authError &&
