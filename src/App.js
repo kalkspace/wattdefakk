@@ -12,6 +12,8 @@ import "./App.css";
 import { UserProvider } from './contexts/user';
 import { firebaseAuth } from './firebase/app';
 import Canvas from "./components/canvas/canvas";
+import Landing from "./components/landing/landing";
+import Join from "./components/join/join";
 
 const generateRandomName = () => uniqueNamesGenerator({
   dictionaries: [adjectives, animals], // colors can be omitted here as not used
@@ -61,15 +63,11 @@ function App() {
               <Route path="/game/:uuid">
                 <Canvas />
               </Route>
-              <Route path="/create">
-                <div>
-                  Create Game
-            </div>
+              <Route path="/join/:uuid">
+                <Join />
               </Route>
               <Route path="/">
-                <div>
-                  Welcome to the landing page, {user.displayName}!
-            </div>
+                <Landing />
               </Route>
             </Switch>
           </UserProvider>
