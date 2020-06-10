@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback, useContext } from "react";
+import * as firebase from "firebase";
+import React, { useCallback, useContext, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import {
   useDocument,
@@ -22,6 +23,21 @@ const Join = ({ ...rest }) => {
     game && game.ref.collection("players")
   );
 
+  const playerIds = useMemo(
+    () => players && players.docs.map((player) => player.ref.id),
+    [players]
+  );
+
+  const [playerInfos, playerInfosLoading, playerInfosError] = useCollectionData(
+    playerIds &&
+      playerIds.length &&
+      fireUsers.where(
+        firebase.firestore.FieldPath.documentId(),
+        "in",
+        playerIds
+      )
+  );
+
   const joinCallback = useCallback(() => {
     game.ref.collection("players").doc(userContext.user.uid).set({});
   }, [game, userContext]);
@@ -35,9 +51,7 @@ const Join = ({ ...rest }) => {
         Joining game {id} by {owner ? owner.name : "..."}
       </h2>
       Players:
-      <ul>
-        {players && players.docs.map((player) => <li>{player.ref.id}</li>)}
-      </ul>
+      <ul>{playerInfos && playerInfos.map((info) => <li>{info.name}</li>)}</ul>
       <input
         type="text"
         value={window.origin + `/join/${id}`}
