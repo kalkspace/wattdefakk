@@ -9,6 +9,7 @@ import { uniqueNamesGenerator, adjectives, animals } from 'unique-names-generato
 
 import "./App.css";
 
+import { UserProvider } from './contexts/user';
 import { firebaseAuth } from './firebase/app';
 import Canvas from "./components/canvas/canvas";
 
@@ -54,22 +55,24 @@ function App() {
           <h1>Wattdefakk</h1>
         </header>
         {
-          user &&
-          <Switch>
-            <Route path="/game/:uuid">
-              <Canvas />
-            </Route>
-            <Route path="/create">
-              <div>
-                Create Game
+          user && userSetupDone &&
+          <UserProvider value={user}>
+            <Switch>
+              <Route path="/game/:uuid">
+                <Canvas />
+              </Route>
+              <Route path="/create">
+                <div>
+                  Create Game
             </div>
-            </Route>
-            <Route path="/">
-              <div>
-                Welcome to the landing page, {user.displayName}!
+              </Route>
+              <Route path="/">
+                <div>
+                  Welcome to the landing page, {user.displayName}!
             </div>
-            </Route>
-          </Switch>
+              </Route>
+            </Switch>
+          </UserProvider>
         }
         {
           authLoading &&
