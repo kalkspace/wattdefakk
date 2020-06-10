@@ -1,4 +1,6 @@
-import React from "react";
+import * as firebase from 'firebase';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import React, { useEffect } from "react";
 import {
   BrowserRouter as Router,
   Switch,
@@ -7,13 +9,21 @@ import {
 
 import "./App.css";
 
-import { firebaseApp } from './firebase/app';
-import { useAnonymousAuth } from './firebase/hooks';
+import './firebase/app';
 import Canvas from "./components/canvas/canvas";
 
 function App() {
+  useEffect(() => {
+    firebase.auth().signInAnonymously();
+  });
 
-  const authState = useAnonymousAuth();
+  const [user, authLoading, authError] = useAuthState(firebase.auth());
+
+  useEffect(() => {
+    if (user && !user.displayName) {
+      user.updateProfile({ 'displayName': 'Gamer' })
+    }
+  }, [user]);
 
   return (
     <Router>
@@ -22,24 +32,30 @@ function App() {
           <h1>Wattdefakk</h1>
         </header>
         {
-          authState.state === "success" ?
-            <Switch>
-              <Route path="/game/:uuid">
-                <Canvas />
-              </Route>
-              <Route path="/create">
-                <div>
-                  Create Game
+          user &&
+          <Switch>
+            <Route path="/game/:uuid">
+              <Canvas />
+            </Route>
+            <Route path="/create">
+              <div>
+                Create Game
             </div>
-              </Route>
-              <Route path="/">
-                <div>
-                  Landing Page
+            </Route>
+            <Route path="/">
+              <div>
+                Welcome to the landing page, {user.displayName}!
             </div>
-              </Route>
-            </Switch>
-            :
-            <div>Logging you in!</div>
+            </Route>
+          </Switch>
+        }
+        {
+          authLoading &&
+          <div>Logging you in...</div>
+        }
+        {
+          authError &&
+          <div>Connecting to firebase auth failed :(</div>
         }
       </div>
     </Router>
