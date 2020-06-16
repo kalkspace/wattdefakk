@@ -1,38 +1,48 @@
 import React from "react";
 import "./canvas.scss";
 import Draggable from "react-draggable";
+import { useParams } from "react-router-dom";
+import { useDocument } from "react-firebase-hooks/firestore";
+import { fireGames } from "../../firebase/app";
 
 const DragElement = ({ onStop, position, children }) => {
   return (
-    <Draggable
-      handle=".handle"
-      position={position}
-      scale={1}
-      onStop={onStop}
-    >
+    <Draggable handle=".handle" position={position} scale={1} onStop={onStop}>
       <g className="handle">{children}</g>
     </Draggable>
   );
 };
 
 const Canvas = () => {
-  const [piece, setPiece] = React.useState({ x: 0, y: 0 });
+  const { id } = useParams();
+
+  const [game, gameLoading, gameError] = useDocument(fireGames.doc(id));
+
+  const moveCallback = React.useCallback(
+    ({ x, y }) => {
+      game.ref.update({ x, y });
+    },
+    [game],
+  );
 
   const handleStop = (_event, position) => {
     const { x, y } = position;
-    setPiece({ x, y });
+    moveCallback({ x, y });
   };
+
+  if (!game) {
+    return "Loading game";
+  }
 
   return (
     <>
+      {/* {JSON.stringify(game.data())}<br/> */}
       <svg viewBox="0 0 440 440" xmlns="http://www.w3.org/2000/svg">
-        <DragElement position={{ x: piece.x, y: piece.y}} onStop={handleStop}>
-          <rect
-            width="5"
-            height="50"
-            x={30}
-            y={400}
-          />
+        <DragElement
+          position={{ x: game.get("x") ?? 0, y: game.get("y") ?? 0 }}
+          onStop={handleStop}
+        >
+          <rect width="5" height="50" x={30} y={400} />
         </DragElement>
 
         {/* <DragElement>
