@@ -6,9 +6,10 @@ import { useDocument } from "react-firebase-hooks/firestore";
 import { fireGames } from "../../firebase/app";
 
 const DragElement = ({ onStop, position, children }) => {
+  const nodeRef = React.useRef(null);
   return (
-    <Draggable handle=".handle" position={position} scale={1} onStop={onStop}>
-      <g className="handle">{children}</g>
+    <Draggable nodeRef={nodeRef} handle=".handle" position={position} scale={1} onStop={onStop}>
+      <g ref={nodeRef} className="handle">{children}</g>
     </Draggable>
   );
 };
