@@ -5,6 +5,8 @@ import { useParams } from "react-router-dom";
 import { useDocument, useCollection } from "react-firebase-hooks/firestore";
 import { fireGames } from "../../firebase/app";
 
+const maximumNumberOfRounds = 6;
+
 const DragElement = ({ onStop, position, children }) => {
   const nodeRef = React.useRef(null);
   return (
@@ -49,6 +51,12 @@ const Canvas = () => {
   };
 
   const nextRound = () => {
+    if (currentRound?.get("num") >= maximumNumberOfRounds) {
+      game.ref.update({
+        finished: true,
+      });
+      return;
+    }
     roundsRef.add({
       num: currentRound.get("num") + 1,
       x: 35,
@@ -59,13 +67,12 @@ const Canvas = () => {
   if (!game) {
     return "Loading game";
   }
-
   return (
     <>
       {/* {JSON.stringify(game.data())}<br/> */}
       <svg viewBox="0 0 440 440" xmlns="http://www.w3.org/2000/svg">
-        {rounds?.docs.map((snap) =>
-          snap.id === currentRound.id ? (
+        {rounds?.docs.reverse().map((snap) =>
+          snap.id === currentRound.id && !game.get("finished") ? (
             <DragElement
               position={{ x: snap.get("x") ?? 0, y: snap.get("y") ?? 0 }}
               onStop={handleStop}
@@ -77,7 +84,7 @@ const Canvas = () => {
           )
         )}
       </svg>
-      <button onClick={nextRound}>Weiter</button>
+      {!game.get("finished") && <button onClick={nextRound}>Weiter</button>}
     </>
   );
 };
