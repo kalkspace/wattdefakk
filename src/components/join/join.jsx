@@ -45,6 +45,14 @@ const Join = ({ ...rest }) => {
     game.ref.collection("players").doc(userContext.user.uid).delete();
   }, [game, userContext]);
 
+  const [currentPlayer, currentPlayerLoading, currentPlayerError] = useDocument(
+    fireGames.doc(id).collection("players").doc(userContext.user.uid)
+  );
+
+  if (currentPlayerLoading) {
+    return null;
+  }
+
   return (
     <div {...rest}>
       <h2>
@@ -57,8 +65,12 @@ const Join = ({ ...rest }) => {
         value={window.origin + `/join/${id}`}
         readOnly={true}
       />
-      <button onClick={joinCallback}>Join game</button>
-      <button onClick={leaveCallback}>Leave game</button>
+      {!currentPlayer.exists && (
+        <button onClick={joinCallback}>Join game</button>
+      )}
+      {currentPlayer.exists && (
+        <button onClick={leaveCallback}>Leave game</button>
+      )}
     </div>
   );
 };
