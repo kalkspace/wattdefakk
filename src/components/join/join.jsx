@@ -7,15 +7,25 @@ import {
   useCollection,
   useCollectionData,
 } from "react-firebase-hooks/firestore";
+import shuffle from "lodash.shuffle";
 
 import { fireUsers, fireGames } from "../../firebase/app";
 import { UserContext } from "../../contexts/user";
+import { useEffect } from "react";
+import { useHistory } from "react-router-dom";
 
 const Join = ({ ...rest }) => {
   const userContext = useContext(UserContext);
   const { id } = useParams();
 
   const [game, gameLoading, gameError] = useDocument(fireGames.doc(id));
+
+  const history = useHistory();
+  useEffect(() => {
+    if (game?.get("started")) {
+      history.push(`/game/${game.id}`);
+    }
+  }, [game, history]);
   const [owner, ownerLoading, ownerError] = useDocumentData(
     game && fireUsers.doc(game.get("owner"))
   );
@@ -45,6 +55,24 @@ const Join = ({ ...rest }) => {
     game.ref.collection("players").doc(userContext.user.uid).delete();
   }, [game, userContext]);
 
+  const [currentPlayer, currentPlayerLoading, currentPlayerError] = useDocument(
+    fireGames.doc(id).collection("players").doc(userContext.user.uid)
+  );
+
+  const startGame = () => {
+    const mixedIds = shuffle(playerIds);
+
+    game.ref.update({
+      started: true,
+      activePlayerOne: mixedIds[0],
+      activePlayerTwo: mixedIds[1],
+    });
+  };
+
+  if (currentPlayerLoading) {
+    return null;
+  }
+
   return (
     <div {...rest}>
       <h2>
@@ -57,8 +85,17 @@ const Join = ({ ...rest }) => {
         value={window.origin + `/join/${id}`}
         readOnly={true}
       />
-      <button onClick={joinCallback}>Join game</button>
-      <button onClick={leaveCallback}>Leave game</button>
+      {!currentPlayer.exists && (
+        <button onClick={joinCallback}>Join game</button>
+      )}
+      {currentPlayer.exists && (
+        <button onClick={leaveCallback}>Leave game</button>
+      )}
+      {userContext.user.uid === game?.get("owner") && (
+        <button disabled={playerIds?.length < 3} onClick={startGame}>
+          Start game
+        </button>
+      )}
     </div>
   );
 };

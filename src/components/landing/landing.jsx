@@ -9,10 +9,11 @@ const Landing = ({ ...rest }) => {
   const history = useHistory();
 
   const newGameCallback = useCallback(async () => {
-    const item = await firestore.collection("games").add({
+    const game = await firestore.collection("games").add({
       owner: userContext.user.uid,
     });
-    history.push(`/join/${item.id}`);
+    await game.collection("players").doc(userContext.user.uid).set({});
+    history.push(`/join/${game.id}`);
   }, [userContext, history]);
 
   return (
